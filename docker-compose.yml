@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:7.0.11-alpine
+
+  django:
+    container_name: django
+    build: 
+      context: ./coloca
+    command: python manage.py runserver 0.0.0.0:8468
+    volumes:
+      - ./coloca:/usr/src/app/
+    ports:
+      - 8000:8468
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=colocaSecretKey
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+    depends_on:
+      - redis
+
+  
+  celery:
+    container_name: celery
+    build: 
+      context: ./coloca
+    command: celery --app=coloca worker -l INFO -B 
+    volumes:
+      - ./coloca:/usr/src/app/
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=colocaSecretKey
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+    depends_on:
+      - redis  
+      - django
